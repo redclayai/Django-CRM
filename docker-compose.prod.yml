@@ -1,0 +1,60 @@
+services:
+  db:
+    ports: !override []
+    restart: unless-stopped
+
+  redis:
+    ports: !override []
+    restart: unless-stopped
+
+  backend:
+    volumes: !override
+      - backend_media:/app/media
+      - backend_static:/app/staticfiles
+    ports: !override
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    command: >
+      bash -c "python manage.py migrate --noinput
+      && python manage.py create_default_admin
+      && python manage.py collectstatic --noinput
+      && gunicorn crm.wsgi:application -b 0.0.0.0:8000 --workers 2 --timeout 120"
+
+  celery-worker:
+    volumes: !override []
+    restart: unless-stopped
+
+  celery-beat:
+    volumes: !override []
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    volumes: !override []
+    ports: !override
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    environment:
+      - ORIGIN=https://2-24-207-75.sslip.io
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  caddy_data:
+  caddy_config:
+  backend_media:
+  backend_static:

@@ -1,8 +1,10 @@
 <script>
   import '../../../../app.css';
   import imgLogo from '$lib/assets/images/logo.png';
+  import { enhance } from '$app/forms';
 
-  let { data } = $props();
+  let { data, form } = $props();
+  let submitting = $state(false);
 </script>
 
 <svelte:head>
@@ -18,13 +20,33 @@
     </a>
 
     <div class="verify-card">
-      {#if data.error}
+      {#if data.error || form?.error}
         <h1 class="verify-title">Link expired or invalid</h1>
-        <p class="verify-message">{data.error}</p>
+        <p class="verify-message">{data.error || form.error}</p>
         <a href="/login" class="back-link">Back to login</a>
-      {:else}
+      {:else if submitting}
         <h1 class="verify-title">Signing you in...</h1>
         <div class="spinner-large"></div>
+      {:else}
+        <h1 class="verify-title">Almost there</h1>
+        <p class="verify-message">Click below to complete your sign-in.</p>
+        <form
+          method="POST"
+          use:enhance={({ cancel }) => {
+            if (submitting) {
+              cancel();
+              return;
+            }
+            submitting = true;
+            return async ({ update }) => {
+              await update();
+              submitting = false;
+            };
+          }}
+        >
+          <input type="hidden" name="token" value={data.token} />
+          <button type="submit" class="confirm-button">Complete sign-in</button>
+        </form>
       {/if}
     </div>
   </div>
@@ -105,6 +127,22 @@
 
   .back-link:hover {
     text-decoration: underline;
+  }
+
+  .confirm-button {
+    display: inline-block;
+    background: #ff7a59;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .confirm-button:hover {
+    background: #ff8f73;
   }
 
   .spinner-large {
