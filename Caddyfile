@@ -6,6 +6,20 @@ crm.redclayai.com {
 		reverse_proxy backend:8000
 	}
 
+	# Safari and some privacy tools omit the Origin header on same-origin
+	# POSTs, which trips SvelteKit's CSRF check. Stamping our own origin on
+	# header-less requests is safe: real cross-site attacks always carry a
+	# (mismatching) Origin set by the browser.
+	@noOrigin {
+		not header Origin *
+		method POST
+	}
+	handle @noOrigin {
+		reverse_proxy frontend:3000 {
+			header_up Origin https://crm.redclayai.com
+		}
+	}
+
 	handle {
 		reverse_proxy frontend:3000
 	}
