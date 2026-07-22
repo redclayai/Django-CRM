@@ -37,7 +37,7 @@ services:
       - "127.0.0.1:3000:3000"
     restart: unless-stopped
     environment:
-      - ORIGIN=https://2-24-207-75.sslip.io
+      - ORIGIN=https://crm.redclayai.com
 
   caddy:
     image: caddy:2-alpine
