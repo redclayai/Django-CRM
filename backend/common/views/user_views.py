@@ -103,7 +103,7 @@ class UsersListView(APIView, LimitOffsetPagination):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             if address_serializer.is_valid():
-                address_obj = address_serializer.save()
+                address_obj = address_serializer.save(org=request.profile.org)
                 user = user_serializer.save(
                     is_active=True,
                 )
